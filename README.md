@@ -4,8 +4,8 @@ Bu proje unity kullanılarak geliştirilmiş bir 3D platform-macera oyunudur.Oyu
 
 ## 🎮 Özellikler
 
-**Multiplayer Desteği:** Oyuncular diğer oyuncularla eş zamanlı yarışır.
-**Farklı Parkurlar:** Zorlu ve eğlenceli engellerle dolu birden fazla parkur.
+**Multiplayer Desteği:** Oyuncular diğer oyuncularla eş zamanlı yarışır.<br>
+**Farklı Parkurlar:** Zorlu ve eğlenceli engellerle dolu birden fazla parkur.<br>
 **Benzersiz Karakterler:** Farklı türlerde benzersiz karakterler.
 
 ## 💻 Kullanılan Teknolojiler
