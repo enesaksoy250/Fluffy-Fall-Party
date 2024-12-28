@@ -10,11 +10,11 @@ public class AdManager : MonoBehaviour
     public static AdManager instance;
 
     private InterstitialAd _interstitialAd;
-    private const string _adUnitId = "ca-app-pub-5199935759761876/8793205809";
+    private const string _adUnitId = "";
 
 
     private RewardedAd _rewardedAd;
-    private const string _adRewardUnitId = "ca-app-pub-5199935759761876/5971125988";
+    private const string _adRewardUnitId = "";
 
     private void Awake()
     {
