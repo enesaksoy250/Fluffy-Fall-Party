@@ -17,14 +17,14 @@ Bu proje unity kullanılarak geliştirilmiş bir 3D platform-macera oyunudur.Oyu
 
   ## Ekran Görüntüleri
 
- ![Oyun Görüntüsü](https://imgur.com/xpVUE1D.jpg)
+ ![Oyun Görüntüsü](Screenshots/1.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/AbS8D4U.jpg)
+![Oyun Görüntüsü](Screenshots/2.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/P2CE7ZU.jpg)
+![Oyun Görüntüsü](Screenshots/3.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/GcYYDS9.jpg)
+![Oyun Görüntüsü](Screenshots/4.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/IUsYlkE.jpg)
+![Oyun Görüntüsü](Screenshots/5.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/FvyNzcl.jpg)
+![Oyun Görüntüsü](Screenshots/6.jpg)
