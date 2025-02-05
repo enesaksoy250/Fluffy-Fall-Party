@@ -15,16 +15,21 @@ Bu proje unity kullanılarak geliştirilmiş bir 3D platform-macera oyunudur.Oyu
   **Firebase:** Kullanıcı verilerini yönetmek için.<br>
   **Photon PUN:**  Online oyun modunda gerçek zamanlı eşleştirme ve çok oyunculu desteği.
 
+
+## 📲 Oyunu İndir
+   [![Google Play'de Mevcut](https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg)](https://play.google.com/store/apps/details?id=com.MaveraGame.JumpyRoyale&pcampaignid=web_share)
+
+
   ## Ekran Görüntüleri
 
- ![Oyun Görüntüsü](https://imgur.com/xpVUE1D.jpg)
+ ![Oyun Görüntüsü](Screenshots/1.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/AbS8D4U.jpg)
+![Oyun Görüntüsü](Screenshots/2.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/P2CE7ZU.jpg)
+![Oyun Görüntüsü](Screenshots/3.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/GcYYDS9.jpg)
+![Oyun Görüntüsü](Screenshots/4.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/IUsYlkE.jpg)
+![Oyun Görüntüsü](Screenshots/5.jpg)
 &nbsp;
-![Oyun Görüntüsü](https://imgur.com/FvyNzcl.jpg)
+![Oyun Görüntüsü](Screenshots/6.jpg)
