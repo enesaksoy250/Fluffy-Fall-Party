@@ -17,23 +17,14 @@ public class DataBaseManager : MonoBehaviour
 {
     public static DataBaseManager instance;
 
-    public TMP_InputField UserNameInput, EmailInput, passwordInput;
 
-    private string userID;
+    public string userID;
     private DatabaseReference dbReference;
 
 
-    [SerializeField] TMP_InputField loginEmailField, loginPasswordField;
+    public bool dataExtractionFinished = false;
 
-    private string username;
-    private string email;
-
-    public bool onConnectDatabase, dataExtractionFinished = false;
-    private bool closeLoadingPanel = false;
-
-    FirebaseAuth auth;
-
- 
+    public string userType;
 
     private void Awake()
     {
@@ -54,202 +45,27 @@ public class DataBaseManager : MonoBehaviour
         }
 
     }
-    void Start()
+
+ 
+    public void Initialize(string userId, string userType,DatabaseReference dbReference)
     {
-
-        LoginControl();
-
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
-            {
-                if (task.Result == DependencyStatus.Available)
-                {
-                    Debug.Log("Firebase'e baþarýyla baðlanýldý!");
-                    onConnectDatabase = true;
-                    auth = FirebaseAuth.DefaultInstance;
-                    dbReference = FirebaseDatabase.DefaultInstance.RootReference;
-
-                    if (PlayerPrefs.HasKey("Login"))
-                    {
-                        userID = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-                        GetInfoFromFirebase(true);
-                        GetWinOnLeaderboard();
-                        Invoke(nameof(PrintTopTenUsers),2);
-
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"Firebase baðlantý hatasý: {task.Result}");
-                }
-            });
-
-      
+        userID = userId;
+        this.userType = userType;
+        this.dbReference = dbReference;
+        GetInfoFromFirebase(true);
+        GetWinOnLeaderboard();
+        Invoke(nameof(PrintTopTenUsers), 2);
     }
-
-
-    private void LoginControl()
-    {
-
-        if (!PlayerPrefs.HasKey("Login"))
-        {
-
-            MainMenuPanelManager.instance.ClosePanel("LoadingPanel");
-            MainMenuPanelManager.instance.LoadPanel("LanguagePanel");
-
-        }
-
-    }
-
-    public void Save()
-    {
-        string username = UserNameInput.text;
-        string email = EmailInput.text;
-        string password = passwordInput.text; // Yeni alan
-
-        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
-        {
-            Debug.LogError("Tüm alanlarý doldurunuz!");
-            MainMenuPanelManager.instance.LoadPanel("ErrorPanel2");//Error2
-            return;
-        }
-
-        MainMenuPanelManager.instance.LoadPanel("GameLoadingPanel");
-
-
-        CheckIfUsernameExists(username, (exists) =>
-        {
-            if (exists)
-            {
-                MainMenuPanelManager.instance.ClosePanel("GameLoadingPanel");
-                MainMenuPanelManager.instance.LoadPanel("ErrorPanel3");
-                Debug.LogError("Kullanýcý adý daha önce alýnmýþ."); //Error3
-            }
-            else
-            {
-
-                auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
-                {
-                    if (task.IsFaulted)
-                    {
-                        MainMenuPanelManager.instance.ClosePanel("GameLoadingPanel");
-                        MainMenuPanelManager.instance.LoadPanel("ErrorPanel4"); //Email formatý yanlýþ
-                        Debug.LogError("Kullanýcý kaydýnda hata: " + task.Exception); //Error1
-                    }
-                    else
-                    {
-
-                        FirebaseUser newUser = task.Result.User;
-                        userID = newUser.UserId;
-                        Debug.Log("Kullanýcý kaydý baþarýlý: " + newUser.UserId);
-
-                        // Yeni kullanýcý verilerini Firebase Realtime Database'e kaydet
-                        WriteNewUser(username, email, userID);
-                    }
-                });
-            }
-        });
-    }
-
-
-    private void CheckIfUsernameExists(string username, Action<bool> callback)
-    {
-        dbReference.Child("users").OrderByChild("username").EqualTo(username)
-          .GetValueAsync().ContinueWithOnMainThread(task =>
-          {
-              if (task.IsFaulted)
-              {
-                  //MainMenuPanelManager.instance.ClosePanel("GameLoadingPanel");
-                  //MainMenuPanelManager.instance.LoadPanel("ErrorPanel");
-                  Debug.LogError("Kullanýcý adý kontrol edilirken hata oluþtu: " + task.Exception); //Error1
-                  callback(false);
-              }
-              else if (task.IsCompleted)
-              {
-                  DataSnapshot snapshot = task.Result;
-                  callback(snapshot.Exists);
-              }
-          });
-    }
-
-    private void WriteNewUser(string username, string email, string userId)
-    {
-        User user = new User(username, email, 0, 0, 1,false);
-        string json = JsonUtility.ToJson(user);
-
-        dbReference.Child("users").Child(userId).SetRawJsonValueAsync(json).ContinueWithOnMainThread(task =>
-        {
-            if (task.IsCompleted)
-            {
-                Debug.Log("Kayýt baþarýlý!");
-                Invoke(nameof(CloseGameLoadingPanel), 2);
-                Invoke(nameof(CloseSignUpPanel), 3);
-                PlayerPrefs.SetInt("Login", 1);
-                UserFirebaseInformation.instance.UserName = username;
-                CharacterSelection.instance.InitializeCharacters();
-                SaveCharacterDataToFirebase(CharacterSelection.instance.characters);
-                GetInfoFromFirebase(false);
-                GetWinOnLeaderboard();
-                PrintTopTenUsers();
-                Invoke(nameof(SetInfo), 1);
-            }
-            else
-            {
-                //MainMenuPanelManager.instance.ClosePanel("GameLoadingPanel");
-                //MainMenuPanelManager.instance.LoadPanel("ErrorPanel");
-                Debug.LogError("Kayýt hatasý."); //Error1
-            }
-        });
-    }
-
-    public void Login()
-    {
-        string enteredEmail = loginEmailField.text;
-        string enteredPassword = loginPasswordField.text;
-
-        if (string.IsNullOrEmpty(enteredEmail) || string.IsNullOrEmpty(enteredPassword))
-        {
-            MainMenuPanelManager.instance.LoadPanel("ErrorPanel2");
-            Debug.LogError("Email ve þifre boþ býrakýlamaz!"); //Error2
-            return;
-        }
-
-        MainMenuPanelManager.instance.LoadPanel("GameLoadingPanel");
-
-
-        auth.SignInWithEmailAndPasswordAsync(enteredEmail, enteredPassword).ContinueWithOnMainThread(task =>
-        {
-            if (task.IsFaulted)
-            {
-                Debug.LogError("Giriþ hatasý: " + task.Exception);
-                MainMenuPanelManager.instance.ClosePanel("GameLoadingPanel");
-                MainMenuPanelManager.instance.LoadPanel("ErrorPanel");
-
-            }
-            else
-            {
-
-                FirebaseUser user = task.Result.User;
-                Debug.Log("Giriþ baþarýlý! UserID: " + user.UserId);
-                PlayerPrefs.SetInt("Login", 1);
-                userID = user.UserId;
-                Invoke(nameof(CloseGameLoadingPanel), 2);
-                Invoke(nameof(CloseLoginPanel), 2);
-                GetInfoFromFirebase(false);
-                LoadCharacterDataFromFirebase(CharacterSelection.instance.characters);
-
-            }
-        });
-    }
-
 
     public void GetUserDataFromFirebase(string key, Action<object> onSuccess)
     {
-
-        dbReference.Child("users").Child(userID).Child(key).GetValueAsync().ContinueWithOnMainThread(task =>
+    
+        dbReference.Child(userType).Child(userID).Child(key).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted)
             {
                 Debug.LogError($"Veritabanýndan {key} alýnýrken bir hata oluþtu: " + task.Exception);
+                print("UserType deðeri=" + userType);
                 GetUserDataFromFirebase(key, onSuccess);
             }
             else if (task.IsCompleted)
@@ -258,7 +74,6 @@ public class DataBaseManager : MonoBehaviour
                 if (snapshot.Exists)
                 {
                     onSuccess(snapshot.Value);
-                    LoadingManager.instance.UpdateProgress();
                 }
                 else
                 {
@@ -269,9 +84,8 @@ public class DataBaseManager : MonoBehaviour
         });
     }
 
-    public void GetInfoFromFirebase(bool login,Action onComplete=null)
+    public void GetInfoFromFirebase(bool login, Action onComplete = null)
     {
-
 
         var dataKeys = new Dictionary<string, Action<object>>
        {
@@ -295,8 +109,8 @@ public class DataBaseManager : MonoBehaviour
 
                 if (remainingKeys == 0)
                 {
-                 
-                    dataExtractionFinished = true;                              
+
+                    dataExtractionFinished = true;
                     onComplete?.Invoke();
 
                     if (!login)
@@ -313,7 +127,7 @@ public class DataBaseManager : MonoBehaviour
 
     public void IncreaseFirebaseInfo(string statName, int incrementValue, Action onComplete = null)
     {
-        dbReference.Child("users").Child(userID).Child(statName).GetValueAsync().ContinueWithOnMainThread(task =>
+        dbReference.Child(userType).Child(userID).Child(statName).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted)
             {
@@ -329,7 +143,7 @@ public class DataBaseManager : MonoBehaviour
 
                     int currentValue = int.Parse(snapshot.Value.ToString());
                     int newValue = currentValue + incrementValue;
-                    dbReference.Child("users").Child(userID).Child(statName).SetValueAsync(newValue);
+                    dbReference.Child(userType).Child(userID).Child(statName).SetValueAsync(newValue);
                     UpdateUserInfo(statName, newValue);
                     onComplete?.Invoke();
 
@@ -339,11 +153,9 @@ public class DataBaseManager : MonoBehaviour
         });
     }
 
-   
-
     public void UpdateFirebaseInfo(string statName, int newValue)
     {
-        dbReference.Child("users").Child(userID).Child(statName).SetValueAsync(newValue).ContinueWithOnMainThread(task =>
+        dbReference.Child(userType).Child(userID).Child(statName).SetValueAsync(newValue).ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted)
             {
@@ -359,7 +171,7 @@ public class DataBaseManager : MonoBehaviour
 
     public void UpdateFirebaseInfo(string statName, bool newValue)
     {
-        dbReference.Child("users").Child(userID).Child(statName).SetValueAsync(newValue).ContinueWithOnMainThread(task =>
+        dbReference.Child(userType).Child(userID).Child(statName).SetValueAsync(newValue).ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted)
             {
@@ -373,9 +185,9 @@ public class DataBaseManager : MonoBehaviour
         });
     }
 
-    public void UpdateFirebaseInfo(string statName, string newValue,Action onComplete = null)
+    public void UpdateFirebaseInfo(string statName, string newValue, Action onComplete = null)
     {
-        dbReference.Child("users").Child(userID).Child(statName).GetValueAsync().ContinueWithOnMainThread(task =>
+        dbReference.Child(userType).Child(userID).Child(statName).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted)
             {
@@ -385,7 +197,7 @@ public class DataBaseManager : MonoBehaviour
             else if (task.IsCompleted)
             {
                 DataSnapshot snapshot = task.Result;
-                dbReference.Child("users").Child(userID).Child(statName).SetValueAsync(newValue);
+                dbReference.Child(userType).Child(userID).Child(statName).SetValueAsync(newValue);
                 UpdateUserInfo(statName, newValue);
                 onComplete?.Invoke();
             }
@@ -453,7 +265,6 @@ public class DataBaseManager : MonoBehaviour
 
     }
 
-
     public void PrintTopTenUsers()
     {
         DatabaseReference leaderboardRef = FirebaseDatabase.DefaultInstance.GetReference("leaderboard");
@@ -487,25 +298,29 @@ public class DataBaseManager : MonoBehaviour
                 i++;
             }
 
-            
+
         });
     }
 
-
     public void UpdateLeaderboard(string username, int win)
     {
-        if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+
+
+        if (userType == "registered")
         {
-            Debug.LogError("Kullanýcý oturum açmamýþ!");
-            return;
+            if (FirebaseAuth.DefaultInstance.CurrentUser == null)
+            {
+                Debug.LogError("Kullanýcý oturum açmamýþ!");
+                return;
+            }
+
+
         }
 
         DatabaseReference leaderboardRef = FirebaseDatabase.DefaultInstance.GetReference("leaderboard");
 
-        string userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
 
-        // Mevcut 'win' deðerini almak için
-        leaderboardRef.Child(userId).RunTransaction(mutableData =>
+        leaderboardRef.Child(userID).RunTransaction(mutableData =>
         {
             if (mutableData.Value == null)
             {
@@ -532,17 +347,77 @@ public class DataBaseManager : MonoBehaviour
             else if (task.IsCompleted)
             {
                 Debug.Log("Transaction baþarýyla tamamlandý.");
+                GetWinOnLeaderboard();
             }
         });
 
     }
 
+    public void ChangeUserIdOnLeaderboard(string lastUserID,string newUserID,string username)
+    {
+
+        DatabaseReference leaderboardRef = FirebaseDatabase.DefaultInstance.GetReference("leaderboard");
+
+        leaderboardRef.Child(lastUserID).GetValueAsync().ContinueWith(task => 
+        {
+
+            if (task.IsCompleted && task.Result.Exists)
+            {
+
+                int win =int.Parse(task.Result.Child("win").Value.ToString());
+
+                Dictionary<string, object> newUserData = new Dictionary<string, object>
+                {
+
+                    {"username",username},
+                    {"win",win}
+
+                };
+
+                leaderboardRef.Child(newUserID).SetValueAsync(newUserData).ContinueWith(setTask =>
+                {
+
+                    if (setTask.IsCompleted)
+                    {
+
+                        leaderboardRef.Child(lastUserID).RemoveValueAsync().ContinueWith(removeTask =>
+                        {
+
+                            if (removeTask.IsCompleted)
+                            {
+                                Debug.Log("Leaderboard silme iþlemi tamamlandý");
+                            }
+
+                            else
+                            {
+                                Debug.LogError("Leaderboard silme iþlemi hatasý");
+                            }
+
+                        });
+
+                    }
+
+                    else
+                    {
+
+                        Debug.LogError("Yeni leaderboard verisi kaydedilemedi");
+
+                    }
+
+
+                });
+
+            }
+        
+        });
+
+    }
 
     public void UpdateUsernameOnLeaderboard(string newUsername)
     {
         DatabaseReference leaderboardRef = FirebaseDatabase.DefaultInstance.GetReference("leaderboard");
 
-     
+
         leaderboardRef.Child(userID).GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted)
@@ -551,15 +426,15 @@ public class DataBaseManager : MonoBehaviour
             }
             else if (task.IsCompleted && task.Result.Exists)
             {
-                
+
                 Dictionary<string, object> currentData = (Dictionary<string, object>)task.Result.Value;
 
                 if (currentData.ContainsKey("username"))
                 {
-                  
+
                     currentData["username"] = newUsername;
 
-               
+
                     leaderboardRef.Child(userID).SetValueAsync(currentData).ContinueWithOnMainThread(updateTask =>
                     {
                         if (updateTask.IsFaulted)
@@ -585,9 +460,7 @@ public class DataBaseManager : MonoBehaviour
         });
     }
 
-
-
-    private void GetWinOnLeaderboard()
+    public void GetWinOnLeaderboard()
     {
 
 
@@ -608,10 +481,10 @@ public class DataBaseManager : MonoBehaviour
 
             DataSnapshot snapshot = task.Result;
 
-            // Veritabanýnda verinin olup olmadýðýný kontrol et
+       
             if (snapshot.Exists)
             {
-                // "win" deðerini al ve integer'a çevir
+                
                 int userWins = int.Parse(snapshot.Child("win").Value.ToString());
 
                 UserFirebaseInformation.instance.Win = userWins;
@@ -625,13 +498,12 @@ public class DataBaseManager : MonoBehaviour
 
     }
 
-
     public void SaveCharacterDataToFirebase(GameObject[] characters)
     {
 
 
         DatabaseReference databaseRef = FirebaseDatabase.DefaultInstance.RootReference
-            .Child("users")
+            .Child("registered")
             .Child(userID)
             .Child("characters");
 
@@ -643,7 +515,7 @@ public class DataBaseManager : MonoBehaviour
 
             var characterData = new Dictionary<string, object>
             {
-                { "isUnlocked", characterInfo.isUnlocked },
+               
                 { "isPurchased", characterInfo.isPurchased }
             };
 
@@ -667,7 +539,7 @@ public class DataBaseManager : MonoBehaviour
 
 
         DatabaseReference databaseRef = FirebaseDatabase.DefaultInstance.RootReference
-            .Child("users")
+            .Child("registered")
             .Child(userID)
             .Child("characters");
 
@@ -688,9 +560,7 @@ public class DataBaseManager : MonoBehaviour
             {
                 int characterIndex = int.Parse(child.Key);
                 CharacterInfo characterInfo = characters[characterIndex].GetComponent<CharacterInfo>();
-
-
-                characterInfo.isUnlocked = bool.Parse(child.Child("isUnlocked").Value.ToString());
+               
                 characterInfo.isPurchased = bool.Parse(child.Child("isPurchased").Value.ToString());
             }
 
@@ -699,12 +569,11 @@ public class DataBaseManager : MonoBehaviour
         });
     }
 
-
     public void UpdateCharacterField(int characterIndex, string fieldName, bool value)
     {
 
         DatabaseReference databaseRef = FirebaseDatabase.DefaultInstance.RootReference
-            .Child("users")
+            .Child("registered")
             .Child(userID)
             .Child("characters")
             .Child(characterIndex.ToString())
@@ -724,31 +593,5 @@ public class DataBaseManager : MonoBehaviour
         });
     }
 
-    private void CloseSignUpPanel()
-    {
-
-        MainMenuPanelManager.instance.ClosePanel("SignUpPanel");
-
-    }
-
-    private void CloseGameLoadingPanel()
-    {
-
-        MainMenuPanelManager.instance.ClosePanel("GameLoadingPanel");
-
-    }
-
-    private void CloseLoginPanel()
-    {
-
-        MainMenuPanelManager.instance.ClosePanel("LoginPanel");
-
-    }
-
-    private void SetInfo()
-    {
-
-        UIDataLoader.instance.SetInfo();
-
-    }
+  
 }
