@@ -17,7 +17,7 @@ Bu proje unity kullanılarak geliştirilmiş bir 3D platform-macera oyunudur.Oyu
 
 
 ## 📲 Oyunu İndir
-   [![Google Play'de Mevcut](https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg)](https://play.google.com/store/apps/details?id=com.MaveraGame.JumpyRoyale&pcampaignid=web_share)
+   [![Google Play'de Mevcut](https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg)](https://play.google.com/store/apps/details?id=com.DefaultCompany.FluffyFallParty)
 
 
   ## Ekran Görüntüleri
