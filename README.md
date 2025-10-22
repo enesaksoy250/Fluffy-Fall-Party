@@ -1,4 +1,4 @@
-# JUMPY ARENA
+# FLUFFY FALL PARTY
 
 Bu proje unity kullanılarak geliştirilmiş bir 3D platform-macera oyunudur.Oyunda, oyuncular diğer oyuncularla yarışarak bitiş çizgisine ilk ulaşmaya çalışır ve eğlenceli bir rekabet deneyimi yaşar.
 
